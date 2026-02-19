@@ -19,7 +19,7 @@ export default function App() {
     setError(null)
     setResult(null)
     try {
-      const res = await axios.post("http://localhost:8000/analyze", { url })
+      const res = await axios.post("https://github-analyzer-y93z.onrender.com/", { url })
       setResult(res.data)
     } catch (e) {
       setError(e.response?.data?.detail || "Something went wrong")

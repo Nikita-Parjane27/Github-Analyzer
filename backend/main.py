@@ -17,95 +17,11 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# ─── CORS ────────────────────────────────────────────────────────────────────
-
+# ─── CORS ─────────────────────────────────────────────────
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],  # Vite default port
-    allow_credentials=True,
+    allow_origins=["*"],       # ← changed to * for now
+    allow_credentials=False,   # ← must be False when using *
     allow_methods=["*"],
     allow_headers=["*"]
 )
-
-# ─── Helpers ─────────────────────────────────────────────────────────────────
-
-def parse_github_url(url: str) -> tuple[str, str]:
-    """Extract owner and repo name from a GitHub URL."""
-    url = url.strip().rstrip("/")
-    match = re.match(r"https://github\.com/([^/]+)/([^/]+?)(?:\.git)?$", url)
-    if not match:
-        raise ValueError(
-            "Invalid GitHub URL. Expected format: https://github.com/owner/repo"
-        )
-    return match.group(1), match.group(2)
-
-
-# ─── Routes ──────────────────────────────────────────────────────────────────
-
-@app.get("/")
-def root():
-    return {"message": "GitHub Repo Analyzer API is running."}
-
-
-@app.get("/health")
-def health():
-    return {"status": "ok"}
-
-
-@app.post("/analyze", response_model=AnalyzeResponse)
-async def analyze(request: AnalyzeRequest):
-    # 1. Parse URL
-    try:
-        owner, repo = parse_github_url(request.url)
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
-
-    # 2. Fetch repo data from GitHub
-    try:
-        data = await get_repo_data(owner, repo)
-    except Exception as e:
-        raise HTTPException(
-            status_code=502,
-            detail=f"Failed to fetch repo from GitHub: {str(e)}"
-        )
-
-    # 3. Guard: private or empty repos
-    if data["info"].get("private"):
-        raise HTTPException(
-            status_code=403,
-            detail="This repository is private. Only public repos are supported."
-        )
-
-    if not data.get("tree"):
-        raise HTTPException(
-            status_code=404,
-            detail="Repository appears to be empty or the default branch has no commits."
-        )
-
-    # 4. Extract file paths
-    file_paths = extract_file_paths(data["tree"])
-
-    # 5. Run Claude analysis
-    try:
-        result = analyze_repo(data["info"], file_paths, data["languages"])
-    except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Analysis failed: {str(e)}"
-        )
-
-    # 6. Build and return response
-    return AnalyzeResponse(
-        meta=RepoMeta(
-            repo_name=data["info"]["name"],
-            owner=owner,
-            stars=data["info"]["stargazers_count"],
-            forks=data["info"]["forks_count"],
-            open_issues=data["info"]["open_issues_count"],
-            description=data["info"].get("description"),
-            default_branch=data["info"]["default_branch"],
-            is_private=data["info"]["private"],
-            languages=data["languages"]
-        ),
-        analysis=AnalysisResult(raw=result["analysis"])
-    )
