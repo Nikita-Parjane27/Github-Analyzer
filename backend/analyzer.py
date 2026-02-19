@@ -1,11 +1,11 @@
-import google.genai as genai
+from google import genai
+from google.genai import types
 import os
 from dotenv import load_dotenv
 
 load_dotenv()
 
-genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
-model = genai.GenerativeModel("gemini-2.5-flash")
+client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 
 def analyze_repo(repo_info: dict, file_paths: list, languages: dict) -> dict:
     prompt = f"""
@@ -29,8 +29,9 @@ def analyze_repo(repo_info: dict, file_paths: list, languages: dict) -> dict:
     Be specific and practical. Reference actual file paths where relevant.
     """
 
-    try:
-        response = model.generate_content(prompt)
-        return {"analysis": response.text}
-    except Exception as e:
-        raise Exception(f"Gemini API error: {str(e)}")
+    response = client.models.generate_content(
+        model="gemini-2.5-flash",
+        contents=prompt
+    )
+
+    return {"analysis": response.text}
