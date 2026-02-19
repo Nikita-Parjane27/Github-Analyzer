@@ -1,6 +1,6 @@
 import { useState } from "react"
 import axios from "axios"
-import UrlInput from "./components/UrlInput"
+import UrlInput from "./components/URLInput"
 import AnalysisResult from "./components/AnalysisResult"
 import LoadingSpinner from "./components/LoadingSpinner"
 import ThemeToggle from "./components/ThemeToggle"
