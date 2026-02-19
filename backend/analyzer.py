@@ -1,5 +1,4 @@
 from google import genai
-from google.genai import types
 import os
 from dotenv import load_dotenv
 
@@ -20,13 +19,13 @@ def analyze_repo(repo_info: dict, file_paths: list, languages: dict) -> dict:
     {chr(10).join(file_paths)}
     
     Please provide:
-    1. **Tech Stack** - frameworks, libraries, tools detected
-    2. **Project Structure Summary** - what each major folder/module does
-    3. **Code Quality Observations** - patterns you notice (good or bad)
-    4. **Improvement Suggestions** - 3-5 concrete, actionable suggestions
-    5. **Overall Assessment** - one paragraph summary
+    1. Tech Stack
+    2. Project Structure Summary
+    3. Code Quality Observations
+    4. Improvement Suggestions
+    5. Overall Assessment
     
-    Be specific and practical. Reference actual file paths where relevant.
+    Be specific and practical.
     """
 
     response = client.models.generate_content(
